@@ -19,14 +19,18 @@ String lampState = "OFF";
 // Relay connected to pin 12
 //const int relay = 11;
 
-bool sendCommand(String command, String expectedResponse) {
+bool sendCommand(String command, String expectedResponse, bool printlnMode = true) {
 
   //clear buffer
   while (SIM900.available() > 0) {
       SIM900.read();
   }
-  
-  SIM900.println(command);
+
+  if (printlnMode) {
+    SIM900.println(command);
+  } else {
+    SIM900.print(command);
+  }
   delay(1000);
 
   String response = "";
@@ -66,13 +70,13 @@ void setup() {
   Serial.print("SIM900 ready...");
 
   // AT command to set SIM900 to SMS mode
-  while (!sendCommand("AT+CMGF=1", "OK")) {
+  while (!sendCommand("AT+CMGF=1\r", "OK", false)) {
     Serial.println("Error setting sms mode. Trying again");
     delay(1000);
   }
   delay(100);
   // Set module to send SMS data to serial out upon receipt
-  while (!sendCommand("AT+CNMI=2,2,0,0,0", "OK")) {
+  while (!sendCommand("AT+CNMI=2,2,0,0,0\r", "OK", false)) {
     Serial.println("Error setting odule to send SMS data to serial out upon receipt. Trying again");
     delay(1000);
   }
