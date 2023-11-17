@@ -19,6 +19,30 @@ String lampState = "OFF";
 // Relay connected to pin 12
 //const int relay = 11;
 
+bool sendCommand(String command, String expectedResponse) {
+
+  //clear buffer
+  while (SIM900.available() > 0) {
+      SIM900.read();
+  }
+  
+  SIM900.println(command);
+  delay(1000);
+
+  String response = "";
+  while(SIM900.available() > 0) { // Read the response
+    response = SIM900.readString();
+    if(response.indexOf(expectedResponse) >= 0) {
+      return true;
+    }
+    delay(10);
+  }
+
+  Serial.print("Trouble executing the command: ");
+  Serial.println(command);
+  return false; // Expected response not found
+}
+
 void setup() {
   // Automatically turn on the shield
   //digitalWrite(9, HIGH);
@@ -33,23 +57,32 @@ void setup() {
   Serial.begin(115200); 
   SIM900.begin(9600);
   Serial.print("Starting...");
+  while (!sendCommand("AT", "OK")) {
+    Serial.println("Error initialising module. Trying again");
+    delay(1000);
+  }
 
-  // Give time to your GSM shield log on to network
-  delay(10000);
   Serial.print("SIM900 ready...");
 
   // AT command to set SIM900 to SMS mode
-  SIM900.print("AT+CMGF=1\r"); 
+  while (!sendCommand("AT+CMGF=1", "OK")) {
+    Serial.println("Error setting sms mode. Trying again");
+    delay(1000);
+  }
   delay(100);
-  // Set module to send SMS data to serial out upon receipt 
-  SIM900.print("AT+CNMI=2,2,0,0,0\r");
+  // Set module to send SMS data to serial out upon receipt
+  while (!sendCommand("AT+CNMI=2,2,0,0,0", "OK")) {
+    Serial.println("Error setting odule to send SMS data to serial out upon receipt. Trying again");
+    delay(1000);
+  }
   delay(100);
-  SIM900.println("AT+CMGD=1,4");
-  delay(1000);
-  SIM900.println("AT+CMGDA= \"DEL ALL\"");
-  delay(1000); 
+  while (!sendCommand("AT+CMGD=1,4", "OK")) {
+    Serial.println("Error deleting smses. Trying again");
+    delay(1000);
+  }
+
   Serial.print("Setup Executed");
-    digitalWrite(relay, HIGH);
+  digitalWrite(relay, HIGH);
   delay(2000);
   digitalWrite(relay, LOW);
 }
