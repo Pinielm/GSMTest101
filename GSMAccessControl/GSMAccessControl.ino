@@ -32,6 +32,7 @@ bool sendCommand(String command, String expectedResponse) {
   String response = "";
   while(SIM900.available() > 0) { // Read the response
     response = SIM900.readString();
+    Serial.println(response);
     if(response.indexOf(expectedResponse) >= 0) {
       return true;
     }
